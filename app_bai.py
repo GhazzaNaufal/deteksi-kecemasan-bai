@@ -28,7 +28,8 @@ def injeksi_css_kustom():
         border-left: 1px solid #E2E8F0;
         border-right: 1px solid #E2E8F0;
         border-bottom: 1px solid #E2E8F0;
-        margin-bottom: 30px; 
+        margin-bottom: 30px;
+        width: 100%;
     }
     
     /* Font pertanyaan diperjelas dengan warna abu-abu gelap (bukan hitam pekat) */
