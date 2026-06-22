@@ -4,18 +4,17 @@ import pandas as pd
 from datetime import datetime
 import altair as alt
 
-# Mengembalikan nama database ke database_bai.db sesuai permintaanmu
+
 DB_NAME = 'database_bai.db'
 
-# ==========================================
+
 # 1. KONFIGURASI CSS (Tampilan UI)
-# ==========================================
 def injeksi_css_kustom():
     st.markdown("""
     <style>
     #MainMenu {visibility: hidden;} footer {visibility: hidden;} 
     
-    /* Background abu-abu kebiruan yang sangat pucat, ramah di mata */
+    /* Background abu-abu kebiruan */
     .stApp { background-color: #F0F4F8; } 
     
     /* STYLING KUESIONER BAI (Calm & Clean Card UI) */
@@ -28,12 +27,10 @@ def injeksi_css_kustom():
         border-left: 1px solid #E2E8F0;
         border-right: 1px solid #E2E8F0;
         border-bottom: 1px solid #E2E8F0;
-        margin-bottom: 30px;
-        width: 100% !important; 
-        min-width: 100% !important;
+        margin-bottom: 30px; 
     }
     
-    /* Font pertanyaan diperjelas dengan warna abu-abu gelap (bukan hitam pekat) */
+    /* Font pertanyaan yang diperjelas dengan warna abu-abu gelap */
     [data-testid="stRadio"] label {
         font-size: 1.1rem !important;
         font-weight: 600;
@@ -67,9 +64,8 @@ def injeksi_css_kustom():
     </style>
     """, unsafe_allow_html=True)
 
-# ==========================================
+
 # 2. FUNGSI DATABASE (SQLite)
-# ==========================================
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
@@ -114,9 +110,8 @@ def hapus_semua_data():
     conn.commit()
     conn.close()
 
-# ==========================================
+
 # 3. LOGIKA ATURAN BAI & SOLUSI EMPATIK
-# ==========================================
 def hitung_tingkatan_bai(skor):
     if skor <= 21: return 'Ringan'
     elif skor <= 35: return 'Sedang'
@@ -132,18 +127,16 @@ def dapatkan_solusi(tingkat):
     else:
         return "Halo... Aku tahu apa yang kamu rasakan akhir-akhir ini pasti sangat berat dan menguras energi. Mengalami kecemasan di tahap ini bukanlah hal yang mudah untuk dilewati sendirian, dan itu sama sekali bukan kelemahanmu. Tolong jangan ragu untuk mencari bantuan profesional ya. Segera jadwalkan sesi dengan psikolog atau layanan konseling terdekat. Meminta bantuan adalah langkah paling berani yang bisa kamu lakukan untuk dirimu sendiri saat ini. Kamu berharga."
 
-# ==========================================
+
 # 4. ANTARMUKA STREAMLIT (Sistem Role-Based)
-# ==========================================
 st.set_page_config(page_title="Deteksi Kecemasan (BAI)", layout="wide")
 injeksi_css_kustom()
 init_db()
 
 peran = st.sidebar.selectbox("Masuk Sebagai:", ["Pasien", "Admin Psikolog"])
 
-# ------------------------------------------
+
 # HALAMAN PASIEN
-# ------------------------------------------
 if peran == "Pasien":
     st.title("Deteksi Dini Kecemasan")
     st.markdown("Instrumen diadaptasi dari **Beck Anxiety Inventory (BAI)**.")
@@ -199,7 +192,7 @@ if peran == "Pasien":
     
     jawaban_user = []
     for i, pertanyaan in enumerate(daftar_pertanyaan):
-        jawaban = st.radio(f"{i+1}. {pertanyaan}", list(opsi.keys()), key=f"q_{i}")
+        jawaban = st.radio(f"{i+1}. {pertanyaan}", list(opsi.keys()), key=f"q_{i}", width="stretch")
         jawaban_user.append(opsi[jawaban])
 
     st.markdown("---")
@@ -223,9 +216,8 @@ if peran == "Pasien":
             st.success(solusi_empatik)
             st.caption("⚠️ *Disclaimer: Hasil ini merupakan deteksi awal berdasarkan kuesioner mandiri dan belum 100% akurat. Untuk diagnosis medis yang pasti, harap berkonsultasi langsung dengan psikolog atau psikiater profesional.*")
 
-# ------------------------------------------
+
 # HALAMAN ADMIN PSIKOLOG
-# ------------------------------------------
 elif peran == "Admin Psikolog":
     st.sidebar.markdown("---")
     password = st.sidebar.text_input("Masukkan Password Admin", type="password")
@@ -234,9 +226,8 @@ elif peran == "Admin Psikolog":
         st.title("📊 Dashboard Riwayat Deteksi")
         st.markdown("---")
                 
-        # ==========================================
+        
         # 1. PROSES IMPORT DILAKUKAN TERLEBIH DAHULU
-        # ==========================================
         st.subheader("📥 Import Data Pasien dari CSV")
         st.markdown("<small>Gunakan fitur ini untuk memasukkan kembali data hasil ekspor (.csv) saat presentasi.</small>", unsafe_allow_html=True)
         
@@ -263,16 +254,14 @@ elif peran == "Admin Psikolog":
                     
         st.markdown("---")
         
-        # ==========================================
-        # 2. BACA DATABASE SETELAH IMPORT SELESAI
-        # ==========================================
+        
+        # 2. MEMBACA DATABASE SETELAH IMPORT SELESAI
         conn = sqlite3.connect(DB_NAME)
         df = pd.read_sql_query("SELECT * FROM riwayat", conn)
         conn.close()
         
-        # ==========================================
+        
         # 3. TAMPILKAN DASHBOARD UTAMA
-        # ==========================================
         if not df.empty:
             st.subheader("Ringkasan Keseluruhan")
             kpi1, kpi2, kpi3 = st.columns(3)
