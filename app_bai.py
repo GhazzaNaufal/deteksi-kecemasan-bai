@@ -222,6 +222,7 @@ elif peran == "Admin Psikolog":
     st.sidebar.markdown("---")
     password = st.sidebar.text_input("Masukkan Password Admin", type="password")
     
+    # Password
     if password == "pakar123":
         st.title("📊 Dashboard Riwayat Deteksi")
         st.markdown("---")
