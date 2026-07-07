@@ -148,81 +148,130 @@ init_db()
 
 peran = st.sidebar.selectbox("Masuk Sebagai:", ["Pasien", "Admin Psikolog"])
 
-
 # HALAMAN PASIEN
 if peran == "Pasien":
     st.title("Deteksi Dini Kecemasan")
     st.markdown("Instrumen diadaptasi dari **Beck Anxiety Inventory (BAI)**.")
     
-    st.subheader("Data Diri")
-    
-    col1, col2, col3, col4 = st.columns(4)
-    with col1: 
-        nama = st.text_input("Nama Lengkap")
-    with col2: 
-        status = st.selectbox("Status", ["Belum Menikah", "Menikah", "Cerai Hidup", "Cerai Mati"])
-    with col3: 
-        umur = st.number_input("Umur", min_value=10, max_value=80, value=20)
-    with col4: 
-        jk = st.selectbox("Jenis Kelamin", ["Laki-laki", "Perempuan"])
+    # State untuk menyimpan hasil agar tidak hilang saat form di-reset
+    if 'hasil_skrining' not in st.session_state:
+        st.session_state.hasil_skrining = None
+
+    # Menggunakan st.form agar form otomatis ter-reset setelah submit
+    with st.form("form_pasien", clear_on_submit=True):
+        st.subheader("Data Diri")
         
-    col5, col6 = st.columns(2)
-    with col5:
-        opsi_pekerjaan = st.selectbox("Pekerjaan", ["Mahasiswa/Pelajar", "Karyawan Swasta", "Wiraswasta", "PNS/BUMN", "Belum/Tidak Bekerja", "Lainnya (Isi Manual)"])
-        if opsi_pekerjaan == "Lainnya (Isi Manual)":
-            pekerjaan = st.text_input("Masukkan Pekerjaan Anda:")
-        else:
-            pekerjaan = opsi_pekerjaan
+        col1, col2, col3, col4 = st.columns(4)
+        with col1: 
+            nama = st.text_input("Nama Lengkap")
+        with col2: 
+            status = st.selectbox("Status", ["Belum Menikah", "Menikah", "Cerai Hidup", "Cerai Mati"])
+        with col3: 
+            umur = st.number_input("Umur", min_value=10, max_value=80, value=20)
+        with col4: 
+            jk = st.selectbox("Jenis Kelamin", ["Laki-laki", "Perempuan"])
             
-    with col6:
-        opsi_pendidikan = st.selectbox("Pendidikan Terakhir", ["SMA / SMK", "Diploma (D1-D4)", "Sarjana (S1)", "Magister (S2)", "Doktor (S3)", "Lainnya (Isi Manual)"])
-        if opsi_pendidikan == "Lainnya (Isi Manual)":
-            pendidikan = st.text_input("Masukkan Pendidikan Terakhir Anda:")
-        else:
-            pendidikan = opsi_pendidikan
+        col5, col6 = st.columns(2)
+        with col5:
+            opsi_pekerjaan = st.selectbox("Pekerjaan", ["Mahasiswa/Pelajar", "Karyawan Swasta", "Wiraswasta", "PNS/BUMN", "Belum/Tidak Bekerja", "Lainnya (Isi Manual)"])
+            if opsi_pekerjaan == "Lainnya (Isi Manual)":
+                pekerjaan = st.text_input("Masukkan Pekerjaan Anda:")
+            else:
+                pekerjaan = opsi_pekerjaan
+                
+        with col6:
+            opsi_pendidikan = st.selectbox("Pendidikan Terakhir", ["SMA / SMK", "Diploma (D1-D4)", "Sarjana (S1)", "Magister (S2)", "Doktor (S3)", "Lainnya (Isi Manual)"])
+            if opsi_pendidikan == "Lainnya (Isi Manual)":
+                pendidikan = st.text_input("Masukkan Pendidikan Terakhir Anda:")
+            else:
+                pendidikan = opsi_pendidikan
 
-    st.markdown("---")
-    
-    st.subheader("Kuesioner Gejala")
-    st.info("💡 **Instruksi:** Baca secara cermat dan pilih satu pernyataan (di tiap kelompok) yang paling menggambarkan kerisauan Anda selama sebulan terakhir, termasuk hari ini.")
-    
-    opsi = {
-        "Tidak ada": 0, 
-        "Ringan, tidak begitu merisaukan": 1, 
-        "Sedang, tidak nyaman sewaktu-waktu": 2, 
-        "Parah, begitu merisaukan sekali": 3
-    }
-    
-    jawaban_user = []
-    for i, pertanyaan in enumerate(DAFTAR_PERTANYAAN):
-        jawaban = st.radio(f"{i+1}. {pertanyaan}", list(opsi.keys()), key=f"q_{i}", width="stretch")
-        jawaban_user.append(opsi[jawaban])
+        st.markdown("---")
+        
+        st.subheader("Kuesioner Gejala")
+        st.info("💡 **Instruksi:** Baca secara cermat dan pilih satu pernyataan (di tiap kelompok) yang paling menggambarkan kerisauan Anda selama sebulan terakhir, termasuk hari ini.")
+        
+        opsi = {
+            "Tidak ada": 0, 
+            "Ringan, tidak begitu merisaukan": 1, 
+            "Sedang, tidak nyaman sewaktu-waktu": 2, 
+            "Parah, begitu merisaukan sekali": 3
+        }
+        
+        jawaban_user = []
+        for i, pertanyaan in enumerate(DAFTAR_PERTANYAAN):
+            jawaban = st.radio(f"{i+1}. {pertanyaan}", list(opsi.keys()), key=f"q_{i}", width="stretch")
+            jawaban_user.append(opsi[jawaban])
 
-    st.markdown("---")
+        st.markdown("---")
 
-    if st.button("Lihat Hasil", type="primary"):
-        if nama.strip() == "":
-            st.warning("Mohon isi nama terlebih dahulu ya!")
-        elif pekerjaan.strip() == "":
-            st.warning("Mohon isi pekerjaan Anda terlebih dahulu!")
-        elif pendidikan.strip() == "":
-            st.warning("Mohon isi pendidikan terakhir Anda terlebih dahulu!")
-        else:
-            skor_total = sum(jawaban_user)
-            tingkat = hitung_tingkatan_bai(skor_total)
-            solusi_empatik = dapatkan_solusi(tingkat)
-            
-            # Panggil fungsi simpan data beserta list jawabannya
-            simpan_data(nama, status, umur, jk, pekerjaan, pendidikan, skor_total, tingkat, jawaban_user)
-            
-            st.markdown("### Hasil")
-            st.metric("Tingkat Kecemasan Anda", tingkat)
-            st.success(solusi_empatik)
-            st.caption("⚠️ *Disclaimer: Hasil ini merupakan deteksi awal berdasarkan kuesioner mandiri dan belum 100% akurat. Untuk diagnosis medis yang pasti, harap berkonsultasi langsung dengan psikolog atau psikiater profesional.*")
+        # Tombol Submit di dalam form
+        submitted = st.form_submit_button("Lihat Hasil", type="primary", use_container_width=True)
 
+        if submitted:
+            if nama.strip() == "":
+                st.error("Mohon isi nama terlebih dahulu ya!")
+            elif pekerjaan.strip() == "":
+                st.error("Mohon isi pekerjaan Anda terlebih dahulu!")
+            elif pendidikan.strip() == "":
+                st.error("Mohon isi pendidikan terakhir Anda terlebih dahulu!")
+            else:
+                skor_total = sum(jawaban_user)
+                tingkat = hitung_tingkatan_bai(skor_total)
+                solusi_empatik = dapatkan_solusi(tingkat)
+                tanggal_tes = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                
+                # Simpan ke Database
+                simpan_data(nama, status, umur, jk, pekerjaan, pendidikan, skor_total, tingkat, jawaban_user)
+                
+                # Simpan ke Session State untuk ditampilkan di luar form
+                st.session_state.hasil_skrining = {
+                    "nama": nama,
+                    "tanggal": tanggal_tes,
+                    "skor": skor_total,
+                    "tingkat": tingkat,
+                    "solusi": solusi_empatik
+                }
+
+    # TAMPILKAN HASIL JIKA ADA (Di luar block st.form agar tidak ikut keriset)
+    if st.session_state.hasil_skrining is not None:
+        hasil = st.session_state.hasil_skrining
+        st.markdown("### Hasil Deteksi Anda")
+        st.metric("Tingkat Kecemasan Anda", hasil["tingkat"])
+        st.success(hasil["solusi"])
+        st.caption("⚠️ *Disclaimer: Hasil ini merupakan deteksi awal berdasarkan kuesioner mandiri dan belum 100% akurat. Untuk diagnosis medis yang pasti, harap berkonsultasi langsung dengan psikolog atau psikiater profesional.*")
+        
+        # FITUR EXPORT UNTUK PASIEN
+        teks_export = f"""==================================================
+HASIL SKRINING AWAL KECEMASAN (BECK ANXIETY INVENTORY)
+==================================================
+Nama          : {hasil['nama']}
+Tanggal Tes   : {hasil['tanggal']}
+Kategori      : {hasil['tingkat']}
+
+PESAN SISTEM:
+{hasil['solusi']}
+
+==================================================
+DISCLAIMER MEDIS:
+Dokumen ini BUKANLAH HASIL DIAGNOSIS KLINIS yang sah. 
+Ini merupakan hasil perhitungan sistem pakar berbasis 
+skrining mandiri. Jika Anda merasa terganggu dengan 
+kondisi Anda, bawalah dokumen ini sebagai rujukan awal 
+saat berkonsultasi dengan Psikolog/Psikiater profesional.
+Rincian analisis klinis spesifik telah direkam dan 
+hanya dapat diakses oleh pakar melalui Dashboard Medis.
+==================================================
+"""
+        st.download_button(
+            label="📄 Download Catatan Skrining (TXT)",
+            data=teks_export,
+            file_name=f"Hasil_Skrining_BAI_{hasil['nama']}.txt",
+            mime="text/plain",
+            use_container_width=True
+        )
 
 # HALAMAN ADMIN PSIKOLOG
-
 elif peran == "Admin Psikolog":
     st.sidebar.markdown("---")
     password = st.sidebar.text_input("Masukkan Password Admin", type="password")
@@ -241,7 +290,7 @@ elif peran == "Admin Psikolog":
             if st.button("Proses Import Data", type="primary"):
                 try:
                     df_import = pd.read_csv(file_csv)
-                    # Syarat kolom sekarang nambah q1 sampai q21
+                    # Syarat kolom sekarang menambah q1 sampai q21
                     kolom_wajib = ['nama', 'status', 'umur', 'jenis_kelamin', 'pekerjaan', 'pendidikan', 'tanggal', 'skor_bai', 'tingkat_cemas'] + [f'q{i}' for i in range(1, 22)]
                     
                     if all(col in df_import.columns for col in kolom_wajib):
